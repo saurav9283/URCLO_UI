@@ -18,7 +18,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate()
 
-  const handleCart = ()=>{
+  const handleCart = () => {
     navigate("/cart-page")
   }
 
@@ -87,7 +87,6 @@ const Navbar = () => {
 
           {/* Search Section */}
           <div className="flex flex-grow items-center justify-end max-[530px]:ml-[-17px] pr-12 gap-2">
-            {/* Search for Map Location with Map Icon and Down Arrow */}
             <div className="flex items-center w-full sm:w-1/4 relative ">
               <LuMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <input
@@ -118,20 +117,20 @@ const Navbar = () => {
             <button className="flex items-center" onClick={handleCart}>
               <LuShoppingCart className="w-6 h-6" />
             </button>
-            <button onClick={handleButtonClick } className="flex items-center">
+            <button onClick={handleButtonClick} className="flex items-center">
               <LuUserCircle2 className="w-6 h-6" />
             </button>
-              {/* Dropdown */}
-      {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-md">
-          <button
-            className="block w-full px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-            onClick={handleLoginLogout}
-          >
-            {isLoggedIn ? 'Logout' : 'Login'}
-          </button>
-        </div>
-      )}
+            {/* Dropdown */}
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-md">
+                <button
+                  className="block w-full px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                  onClick={handleLoginLogout}
+                >
+                  {isLoggedIn ? 'Logout' : 'Login'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>

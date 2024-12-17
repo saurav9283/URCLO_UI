@@ -2,12 +2,25 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { baseUrl } from '../../../data/Api';
 import axios from 'axios';
+import { Snackbar } from "@mui/material";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -18,17 +31,20 @@ const ForgotPassword = () => {
       const response = await axios.post(`${baseUrl}/password/forgot`, { email });
 
       // Handle successful response
-      if (response.data?.msg) {
+      // if (response.data?.msg) {
+      //   setMessage(response.data.msg);
+      //   setTimeout(() => navigate("/login/reset-password"), 3000); // Redirect to reset-password after success
+      // }
+      if(response.status === 200)
+      {
         setMessage(response.data.msg);
-        setTimeout(() => navigate("/login/reset-password"), 3000); // Redirect to reset-password after success
+        handleClick();
+        // setTimeout(() => navigate("/login/reset-password"), 2000); // Redirect to reset-password after success
       }
-    } catch (err) {
+    } catch (error) {
       // Handle error response
-      if (err.response?.status === 400) {
-        setError("You are not registered with this email yet!");
-      } else {
-        setError("An error occurred. Please try again later.");
-      }
+        setMessage(error.response?.data?.msg || 'Somethindg went wrong');
+        handleClick();
     }
   };
 
@@ -63,6 +79,13 @@ const ForgotPassword = () => {
           </Link>
         </div>
       </div>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={handleClose}
+        message={message}
+      // anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </div>
   );
 };

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FaGoogle, FaFacebook, FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { baseUrl } from "../../../data/Api";
+import { Snackbar } from "@mui/material";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,10 +16,26 @@ const Register = () => {
   const [emailDisabled, setEmailDisabled] = useState(false); // Disable email after signup
   const [isOtpStage, setIsOtpStage] = useState(false); // Handle OTP stage
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+
 
   const handleSignup = async (e) => {
     e.preventDefault();
-
+    setIsLoading(true);
     const userData = {
       name,
       email: isPhone ? undefined : inputValue,
@@ -29,13 +46,24 @@ const Register = () => {
 
     try {
       const response = await axios.post(`${baseUrl}/register`, userData);
-      console.log(response, "===response register");
-      alert("Registration successful! Please verify your email.");
-      setEmailDisabled(true); // Disable email input
-      setIsOtpStage(true); // Show OTP input field
+      console.log(response, "response");
+
+      if (response.status === 201) {
+        setEmailDisabled(true); // Disable email input
+        setIsOtpStage(true); // Show OTP input field
+        setMessage(response.data.msg);
+        handleClick();
+      }
+
+      // alert("Registration successful! Please verify your email.");
     } catch (error) {
-      console.error("Registration error:", error.response?.data || error.message);
-      alert("Registration failed. Please try again.");
+      console.error("Registration error:", error);
+      setMessage(error.response?.data?.msg || "Registration failed");
+      handleClick();
+
+    }
+    finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -50,12 +78,16 @@ const Register = () => {
         email: !isPhone ? inputValue : undefined,
         phone: isPhone ? inputValue : undefined,
       });
-
-      alert("Verification successful!");
-      navigate("/login");
+      setMessage(response.data.msg);
+      handleClick();
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (error) {
       console.error("Verification error:", error.response?.data || error.message);
-      alert("Invalid OTP. Please try again.");
+      setMessage(error.response?.data?.msg || "Invalid OTP. Please try again.");
+      handleClick();
+      // alert("Invalid OTP. Please try again.");
     }
   };
 
@@ -86,10 +118,13 @@ const Register = () => {
     // Implement social login logic here
   };
 
+
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-2 max-[450px]:p-4">
       <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md border-[0.2px] border-black">
-        <h2 className="text-2xl font-bold text-center mb-6">Sign Up</h2>
+        <h2 className="text-2xl font-bold text-center mb-6"> {isLoading ? "Loading..." : "Sign Up"}
+        </h2>
 
         {!isOtpStage && (
           <form onSubmit={handleSignup}>
@@ -110,12 +145,12 @@ const Register = () => {
 
             <div className="mb-4">
               <label htmlFor="emailPhone" className="block text-gray-700">
-                Email
+                Email or phone
               </label>
               <input
                 id="emailPhone"
                 type="text"
-                placeholder="Email"
+                placeholder="Email or Phone"
                 value={inputValue}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -148,20 +183,19 @@ const Register = () => {
                   </button>
                 </div>
                 <div
-                  className={`mt-2 h-2 rounded-full ${
-                    passwordStrength === "strong"
+                  className={`mt-2 h-2 rounded-full ${passwordStrength === "strong"
                       ? "bg-green-500"
                       : passwordStrength === "medium"
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                  }`}
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                    }`}
                   style={{
                     width:
                       passwordStrength === "strong"
                         ? "100%"
                         : passwordStrength === "medium"
-                        ? "70%"
-                        : "40%",
+                          ? "70%"
+                          : "40%",
                   }}
                 />
                 <span className="text-sm text-gray-500">
@@ -233,6 +267,13 @@ const Register = () => {
           </Link>
         </div>
       </div>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={handleClose}
+        message={message}
+      // anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </div>
   );
 };

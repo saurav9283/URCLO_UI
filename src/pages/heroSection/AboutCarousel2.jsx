@@ -37,7 +37,7 @@ export default function AboutCarousel1() {
         </div>
       </div>
      
-      <Slider {...settings} className="bg-white gap-2  overflow-hidden h-80 mt-2 mr-8 ml-8 mb-3">
+      <Slider {...settings} className="bg-white gap-2  overflow-hidden h-80 mt-2 mr-8 ml-8 mb-3 ">
       {carouselNew.map((item, index) => (
         <div key={index} className="p-2">
           <img src={item.image} className="w-[200px] h-[200px] md:max-h-[200px] lg:max-h-[200px] object-fill  rounded-lg" alt="Game 1"/>

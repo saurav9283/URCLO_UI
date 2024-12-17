@@ -35,7 +35,7 @@ export default function AboutCarousel1() {
           
         </div>
       </div>
-      <Slider {...settings} className="bg-white gap-2 object-center overflow-hidden h-80 p-8 pb-3 ">
+      <Slider {...settings} className="bg-white gap-2 object-center overflow-hidden h-80 p-8 pb-3 mt-[-4%]">
         <div className="p-2">
           <img src="https://res.cloudinary.com/urbanclap/image/upload/t_high_res_template/w_394,dpr_1,fl_progressive:steep,q_auto:low,f_auto,c_limit/images/growth/home-screen/1727446476041-390a57.jpeg" className="w-full h-[200px] md:max-h-[200px] lg:max-h-[200px] object-fill  rounded-lg" alt="Game 1"/>
         

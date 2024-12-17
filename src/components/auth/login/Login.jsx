@@ -1,6 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { loginApi, verifyPhoneOTP } from "../../../data/Api"
+import { Snackbar } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { login } from "../../../slice/authSlice";
+import io from 'socket.io-client';
+const socket = io('http://localhost:4956');
 
 const InputField = ({ label, type, value, onChange, placeholder, errorMessage }) => (
   <div className="mb-4">
@@ -17,6 +23,7 @@ const InputField = ({ label, type, value, onChange, placeholder, errorMessage })
 );
 
 const LoginPage = () => {
+  const dispatch = useDispatch();
   const [isPhoneLogin, setIsPhoneLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +33,20 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({ email: "", password: "", otp: "" });
   const [apiError, setApiError] = useState("");
   const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+
 
   const handleInputChange = (e) => {
     setEmail(e.target.value);
@@ -80,27 +101,43 @@ const LoginPage = () => {
         ? { phone: email, otp }
         : { email, password };
 
+      console.log('loginApi: ', loginApi);
       const endpoint = isPhoneLogin
-        ? "/api/user-auth/login-phone"
-        : "/api/user-auth/login";
+        ? `${loginApi}`
+        : `${loginApi}`;
 
       const response = await axios.post(endpoint, payload);
       console.log("Login success:", response.data);
 
-      if (!isPhoneLogin) {
-        alert("Login successful!");
-        navigate("/dashboard");
+      if (response.status === 201) {
+        localStorage.setItem("user_id", response.data.user_id);
+        dispatch(login({ user: response.data.user_id }));
+        // setMessage(response.data.msg);
+        // socket.on("pushNotification", {
+        //   user_id: response.data.user_id,
+        //   message: `User ${response.data.user_id} logged in successfully.`,
+        // });
+        handleClick();
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
       }
     } catch (error) {
       console.error("Login error:", error.response?.data || error.message);
-
-      if (error.response?.status === 400 && !isPhoneLogin) {
-        setApiError("Your email ID is not verified.");
-      } else {
-        setApiError("An error occurred. Please try again.");
-      }
+      setMessage(error.response?.data?.msg || "Something went wrong. Please try again.");
+      handleClick();
     }
   };
+
+  useEffect(() => {
+    socket.on('pushNotification', (data) => {
+      console.log('data: ', data);
+      setMessage(data.message);
+    });
+    return () => {
+      socket.off('pushNotification');
+    };
+  }, []);
 
   const handleSendOtp = async () => {
     if (!email) {
@@ -109,28 +146,46 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await axios.post("/api/user-auth/send-otp", { phone: email });
+      const response = await axios.post(`${loginApi}`, { phone: email });
       console.log("OTP sent:", response.data);
-      setIsOtpSent(true);
+      if (response.status === 201) {
+        setMessage(response.data.msg);
+        handleClick();
+        setIsOtpSent(true);
+      }
     } catch (error) {
       console.error("Send OTP error:", error.response?.data || error.message);
       setApiError("Failed to send OTP. Please try again.");
+      setMessage(error.response?.data?.msg || "something went wrong. Please try again.");
+      handleClick();
     }
   };
 
   const handleVerifyOtp = async () => {
     if (!otp) {
-      setErrors({ ...errors, otp: "OTP is required." });
+      // setErrors({ ...errors, otp: "OTP is required." });
+      handleClick();
       return;
     }
 
     try {
-      const response = await axios.post("/api/user-auth/verify-otp", { phone: email, otp });
+      const response = await axios.post(`${verifyPhoneOTP}`, { phone: email, otp });
       console.log("OTP verified:", response.data);
-      setOtpVerified(true);
+      if (response.status === 200) {
+        setMessage(response.data.msg);
+        handleClick();
+        setOtpVerified(true);
+        localStorage.setItem("user_id", response.data.user_id);
+        dispatch(login({ user: response.data.user_id }));
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }
     } catch (error) {
       console.error("Verify OTP error:", error.response?.data || error.message);
-      setApiError("Invalid OTP. Please try again.");
+      // setApiError("Invalid OTP. Please try again.");
+      setMessage(error.response?.data?.msg || "Invalid OTP. Please try again.");
+      handleClick();
     }
   };
 
@@ -241,6 +296,13 @@ const LoginPage = () => {
           </button>
         </form>
       </div>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={handleClose}
+        message={message}
+      // anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </div>
   );
 };

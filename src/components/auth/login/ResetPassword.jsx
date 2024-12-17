@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { baseUrl } from '../../../data/Api';
+import { resetPassword } from '../../../data/Api';
+import { Snackbar } from "@mui/material";
 
 const ResetPassword = () => {
     const location = useLocation();
-    const token = new URLSearchParams(location.search).get('YOUR_TOKEN'); // Extract token from URL
+    const token = new URLSearchParams(location.search).get('token');
 
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const navigate= useNavigate();
+    const [open, setOpen] = useState(false);
+    const handleClick = () => {
+        setOpen(true);
+    };
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpen(false);
+    };
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
@@ -26,20 +39,21 @@ const ResetPassword = () => {
         try {
             // API call to reset password
             const response = await axios.post(
-                `${baseUrl}/password/reset?YOUR_TOKEN=${token}`,
+                `${resetPassword}?token=${token}`,
                 { password: newPassword }
             );
-
-            if (response.data?.msg) {
-                setMessage('Password reset successfully.');
+            if(response.status === 200){
+                setMessage(response.data.msg);
+                handleClick();
+                setTimeout(() => {
+                    navigate("/login");
+                  }, 1500);
             }
+
         } catch (err) {
             // Handle errors
-            if (err.response?.status === 400) {
-                setError(err.response.data?.msg || 'Invalid token or request.');
-            } else {
-                setError('An error occurred. Please try again later.');
-            }
+            setMessage(err.response?.data?.msg || "Invalid OTP. Please try again.");
+            handleClick();
         }
     };
 
@@ -80,6 +94,13 @@ const ResetPassword = () => {
                 {message && <p className="text-green-500 mt-4">{message}</p>}
                 {error && <p className="text-red-500 mt-4">{error}</p>}
             </div>
+            <Snackbar
+                open={open}
+                autoHideDuration={3000}
+                onClose={handleClose}
+                message={message}
+            // anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            />
         </div>
     );
 };
