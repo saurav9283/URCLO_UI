@@ -22,7 +22,7 @@ import { getNotification } from "../../data/Api";
 
 const HomePage = () => {
   const userId = useSelector((state) => state?.authSlice?.user);
-  // console.log('userId: ', userId);
+  console.log('userId: ', userId);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
